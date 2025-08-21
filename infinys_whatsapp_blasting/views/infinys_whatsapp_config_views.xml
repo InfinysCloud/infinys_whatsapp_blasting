@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_infinys_whatsapp_config_form" model="ir.ui.view">
+            <field name="name">infinys.whatsapp.config.form</field>
+            <field name="model">infinys.whatsapp.config</field>
+            <field name="arch" type="xml">
+                <form string="Configuration">
+                    <field name="id" invisible="1"/>
+                    <header>
+                        <button name="btn_test_credential" type="object" string="Test Credential" class="oe_highlight"/>
+                    </header>
+                    <sheet>
+                        <group name="information" string="WhatsApp Information">
+                            <field name="provider" widget="selection" placeholder="Select Provider" required="1"/>
+                            <field name="whatsapp_number" widget="phone" placeholder="Enter WhatsApp Number" required="1"/>
+
+                            <group name="authentication" string="Authentication">
+                                 <field name="token" placeholder="Enter API Token" invisible="invisible_trial"/>
+                                <field name="authentication_user" placeholder="Username for basic authentication, if required by the API."  invisible="invisible_trial"/>
+                                <field name="active"/>
+                            </group>
+                            <group name ="api_details" string="API Details">
+                                <field name="authentication_password" widget="password" placeholder="Password for basic authentication, if required by the API." invisible="invisible_trial"/>
+                                <field name="whatsapp_api_url"  widget="url" 
+                                    placeholder="https://your-whatsapp-api-url.com" 
+                                    help="Enter the URL for your WhatsApp API Url." 
+                                    required="1" invisible="invisible_trial"/>
+                                <field name="webhook_url"  widget="url" 
+                                    placeholder="https://your-whatsapp-api-url.com" 
+                                    help="Enter the URL for your Webhook API Url for accessing N8n service." 
+                                    required="1" invisible="invisible_trial"/>
+                            </group>
+                        </group>
+                   
+                    <notebook>
+                        <page string="Welcome Message" name="welcome_message">
+                            <field name="welcome_message" string="" placeholder="Enter your welcome message" widget="text"/>
+                        </page>
+                    </notebook>  
+                   </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_infinys_whatsapp_config_list" model="ir.ui.view">
+            <field name="name">view.infinys.whatsapp.config.list</field>
+            <field name="model">infinys.whatsapp.config</field>
+            <field name="arch" type="xml">
+                <list string="Configuration">
+                    <field name="provider"/>
+                    <field name="webhook_url"/>
+                    <field name="whatsapp_number"/>
+                    <field name="active"/>
+                    <field name="invisible_trial" optional="1"/>
+                    <field name="ir_deployment" optional="1"/>
+                </list>
+            </field>
+        </record>
+        
+        <record id="action_infinys_whatsapp_config" model="ir.actions.act_window">
+            <field name="name">Configuration</field>
+            <field name="res_model">infinys.whatsapp.config</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+    </data>
+</odoo>

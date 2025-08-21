@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_infinys_whatsapp_mailing_log_form" model="ir.ui.view">
+            <field name="name">infinys.whatsapp.mailing.log.form</field>
+            <field name="model">infinys.whatsapp.mailing.log</field>
+            <field name="arch" type="xml">
+                <form string="Mailing Log" create="false" edit="false">
+                    <field name="id" invisible="1"/>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="mailing_id" placeholder="Mailing" readonly="1" invisible="not id"/>
+                                <field name="mailing_list_id" placeholder="Mailing List" readonly="1" invisible="not id"/>
+                                <field name="state" widget="State"/>
+                            </group>
+                            <group>
+                                <field name="total_contact" placeholder="Total Contacts" readonly="1" invisible="not id"/>
+                                <field name="sent_count" placeholder="Total Sent" readonly="1" invisible="not id"/>
+                                <field name="sent_date" widget="date" placeholder="Sent Date" readonly="1" invisible="not id"/>
+                                <field name="create_date"/>
+                            </group>
+                              <field name="error_msg" widget="text" placeholder="Error Message" readonly="1" invisible="not id"/>
+                        </group>
+                        <notebook>
+                            <page string="Whatsapp Sent History" name="sent_messages" modifiers="{'invisible': [('mailing_sent_ids', '=', [])]}">
+                                <field name="mailing_sent_ids" widget="one2many_list" readonly="1">
+                                    <list edit="popup">
+                                        <field name="write_date"/> 
+                                        <field name="contact_id"/>
+                                        <field name="to_number" />   
+                                        <field name="mailing_id"/>
+                                        <field name="mailing_list_id"/>
+                                        <field name="is_queued" string="Queued"/>
+                                        <field name="body" string="Message" widget="text" optional="1"/>
+                                        <field name="json_message" string="JSON Message" widget="text" optional="1"/>           
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>                
+                </form>
+            </field>
+        </record>
+
+        <record id="view_infinys_whatsapp_mailing_log" model="ir.ui.view">
+            <field name="name">view.infinys.whatsapp.mailing.log</field>
+            <field name="model">infinys.whatsapp.mailing.log</field>
+            <field name="arch" type="xml">
+                <list string="Mailing Log">
+                    <field name="mailing_id"/>
+                    <field name="mailing_list_id"/>
+                    <field name="state" string="State" readonly="1"/>
+                    <field name="total_contact"/>
+                    <field name="sent_count"/>
+                    <field name="sent_date" widget="date" readonly="1"/>
+                    <field name="error_msg" string="Error Message" readonly="1" optional="1"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="action_infinys_whatsapp_mailing_log" model="ir.actions.act_window">
+            <field name="name">Mailing Log</field>
+            <field name="res_model">infinys.whatsapp.mailing.log</field>
+            <field name="view_mode">list,form</field>
+        </record>
+    </data>
+</odoo>

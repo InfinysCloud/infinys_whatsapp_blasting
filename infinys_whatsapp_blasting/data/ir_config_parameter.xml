@@ -1,0 +1,12 @@
+<odoo>
+    <data noupdate="1">
+        <record id="infinys_whatsapp_blasting_token" model="ir.config_parameter">
+            <field name="key">infinys_whatsapp_blasting.token</field>
+            <field name="value">your_default_value</field>
+        </record>
+         <record id="infinys_whatsapp_blasting_deployment" model="ir.config_parameter">
+            <field name="key">infinys_whatsapp_blasting.deployment</field>
+            <field name="value">Production</field>
+        </record>
+    </data>
+</odoo>

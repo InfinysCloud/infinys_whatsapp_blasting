@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_infinys_whatsapp_mailing_form" model="ir.ui.view">
+            <field name="name">infinys.whatsapp.mailing.form</field>
+            <field name="model">infinys.whatsapp.mailing</field>
+            <field name="arch" type="xml">
+                <form string="Mailing">
+                    <field name="id" invisible="1"/>
+                    <header>
+                        <button name="btn_submit" string="Submit to Scheduler" class="oe_highlight" type="object" invisible="whatsapp_config_id and (state == 'submit' or state == 'canceled')"/>
+                        <button name="btn_back_draft" string="Draft" class="btn btn-primary" type="object" invisible="state == 'canceled' and state=='failed'"/>
+                        <button name="btn_test" string="Test" type="object" invisible="not whatsapp_config_id or (state != 'draft' and state != 'canceled')"/>
+                        <button name="btn_send_now" string="Send Now" class="oe_highlight" type="object" invisible="not whatsapp_config_id or state != 'submit'"/>
+                        <button name="btn_cancel" string="Cancel" class="btn btn-danger" type="object" invisible="not whatsapp_config_id or state != 'submit'"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,submit,done,cancel"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <field name="error_msg" widget="text" readonly="1" />
+                            <label for="name" string="Subject"/>
+                            <h1>
+                                <field class="text-break" name="name" placeholder="Subject/Name" required="1" readonly="state != 'draft' and state != 'canceled'" />
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="whatsapp_config_id" placeholder="Whatsapp Account" required="1" readonly="state != 'draft' and state != 'canceled'" />
+                                <field name="responsible_id" placeholder="Responsible" readonly="state != 'draft'"/>
+                                <field name="recipients" required="1" placeholder="Recipients" readonly="state != 'draft' and state != 'canceled'" />
+                                <field name="mailing_list_id" required="1" invisible="recipients != 'mailinglist'" placeholder="Mailing List" domain="[('status', '=', 'active')]" readonly="state != 'draft' and state != 'canceled'" />
+                                <field name="contact_ids" required="1" widget="many2many_tags" invisible="recipients != 'mailinglistcontact'" placeholder="Contact List" domain="[('is_active', '=', 'true')]" readonly="state != 'draft' and state != 'canceled'" />
+                            </group>
+                            <group>
+                                <field name="schedule_date" placeholder="Schedule Date" widget="datetime" readonly="state != 'draft' and state != 'canceled'" />
+                                <field name="header_type" placeholder="Header Type" readonly="state != 'draft' and state != 'canceled'" required="1"/>
+                                <field name="header_text"
+                                    invisible="header_type != 'text'" required="header_type == 'text'" readonly="state != 'draft' and state != 'canceled'"
+                                    placeholder="e.g. Invitation for {{contact.name}}"/>
+                                <field name="footer_text"
+                                    readonly="state != 'draft' and state != 'canceled'" placeholder="e.g. Thank you for your attention, Regards, Terima kasih, ... etc"/>
+                              </group>
+                        </group>
+                        <notebook>
+                            <page string="Message">
+                                <field name="message" readonly="state != 'draft' and state != 'canceled'"/>
+                            </page>
+                            <page string="Variables">
+                            <table style="width: 60%;">
+                                <tr>
+                                    <td style="width: 5%;font-weight: bold;">
+                                        No                                    </td>
+                                    <td style="width: 30%;font-weight: bold;">
+                                        Variable
+                                    </td>
+                                    <td style="width: 30%;font-weight: bold;">
+                                        Mapping To
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        1.
+                                    </td>
+                                    <td>
+                                        {{subject}}
+                                    </td>
+                                    <td>
+                                        Mailings.subject
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        2.
+                                    </td>
+                                    <td>
+                                        {{contact.name}}
+                                    </td>
+                                    <td>
+                                        MailinglistContact.name
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        3.
+                                    </td>
+                                    <td>
+                                        {{contact.full_name}}
+                                    </td>
+                                    <td>
+                                        MailinglistContact.full_namename
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        4.
+                                    </td>
+                                    <td>
+                                        {{mailingList.name}}
+                                    </td>
+                                    <td>
+                                        MailingList.name 
+                                    </td>
+                                </tr>
+                            </table>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_infinys_whatsapp_mailing_list" model="ir.ui.view">
+            <field name="name">view.infinys.whatsapp.mailing.list</field>
+            <field name="model">infinys.whatsapp.mailing</field>
+            <field name="arch" type="xml">
+                <list string="Mailings">
+                    <field name="schedule_date"/> 
+                    <field name="name" string="Subject"/>
+                    <field name="responsible_id" string="Responsible"/>
+                    <field name="mailing_list_id" string="Mailing List"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submit,done,canceled"/>
+                    <field name="sent_date" string="Send Date"/> 
+                </list>
+            </field>
+        </record>
+
+        <record id="view_infinys_whatsapp_mailing_kanban" model="ir.ui.view">
+            <field name="name">view.infinys.whatsapp.mailing.kanban</field>
+            <field name="model">infinys.whatsapp.mailing</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_small_column" default_group_by="state" default_order="state_idx asc" create="true" delete="true">
+                    <field name="name"/>
+                    <field name="state"/>
+                    <field name="state_idx"/>  
+                        <templates>
+                            <t t-name="kanban-box">
+                                <div t-attf-class="oe_kanban_global_click o_kanban_record {{ record.state.raw_value }}">
+                                    <div class="o_kanban_details">
+                                        <strong><field name="name"/></strong><br/>
+                                        <span>To Mailing List : <field name="mailing_list_id" widget="many2one" options="{'no_create': True}"/></span><br/>
+                                        <span>Schedule Date : <field name="schedule_date"/></span><br/>
+                                        <span>Sent Date : <field name="sent_date"/></span>
+                                        <span style="display: none;">State idx : <field name="state_idx"/></span>
+                                    </div>
+                                </div>
+                            </t>
+                        </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <record id="action_infinys_whatsapp_mailings" model="ir.actions.act_window">
+            <field name="name">Mailings</field>
+            <field name="res_model">infinys.whatsapp.mailing</field>
+            <field name="view_mode">list,kanban,form</field>
+            <field name="context">{'kanban_order': 'state_idx asc'}</field>
+             <field name="context">{'group_by': ['state','create_year']}</field>
+        </record>
+
+    </data>
+</odoo>
+

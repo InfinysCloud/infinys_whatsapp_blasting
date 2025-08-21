@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <menuitem
+            id="menu_infinys_whatsapp_root"
+            name="Whatsapp Blasting"
+            sequence="30"
+            groups="base.group_user"
+            web_icon="infinys_whatsapp_blasting,static/description/icon.png"
+        />
+          
+        <menuitem id="menu_infinys_whatsapp_mailings_root"
+            name="Mailings"
+            parent="menu_infinys_whatsapp_root"
+            sequence="10"
+        />  
+
+        <menuitem id="menu_infinys_whatsapp_mailings_subroot"
+            name="Mailings"
+            parent="menu_infinys_whatsapp_mailings_root"
+            sequence="10"
+            action="action_infinys_whatsapp_mailings"
+        />  
+
+        <menuitem id="menu_infinys_whatsapp_mailings_log"
+            name="Mailing Log"
+            parent="menu_infinys_whatsapp_mailings_root"
+            sequence="20"
+            action="action_infinys_whatsapp_mailing_log"
+        />  
+
+        <menuitem id="menu_mailing_list_root"
+            name="Mailing List"
+            parent="menu_infinys_whatsapp_root"
+            sequence="20"
+        />
+
+        <menuitem id="menu_configuration_root"
+            name="Configuration"
+            parent="menu_infinys_whatsapp_root"
+            sequence="30"
+        />
+
+        <menuitem
+            id="menu_infinys_whatsapp_mailinglist"
+            name="Mailing Lists"
+            parent="menu_mailing_list_root"
+            action="action_infinys_whatsapp_mailinglist"
+            sequence="1"
+        />
+        
+        <menuitem
+            id="menu_infinys_whatsapp_contact"
+            name="Mailing Lists Contacts"
+            parent="menu_mailing_list_root"
+            action="action_infinys_whatsapp_contact"
+            sequence="2"   
+        />
+
+        <menuitem
+            id="menu_infinys_whatsapp_incoming"
+            name="Whatsapp Incomings"
+            parent="menu_mailing_list_root"
+            action="action_infinys_whatsapp_incoming"
+            sequence="3"   
+        />
+        
+        <menuitem
+            id="menu_infinys_whatsapp_sent"
+            name="Whatsapp Outgoings"
+            parent="menu_mailing_list_root"
+            action="action_infinys_whatsapp_sent"
+            sequence="4"   
+        />
+
+        <menuitem
+            id="menu_infinys_whatsapp_config"
+            name="Settings"
+            parent="menu_configuration_root"
+            action="action_infinys_whatsapp_config"
+            sequence="1"
+        />
+</odoo>

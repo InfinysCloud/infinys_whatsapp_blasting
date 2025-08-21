@@ -10,3 +10,10 @@ Our Whatsapp Blasting / Broadcasting Messaging Application is a powerful communi
         - Record all incoming and outgoing messages for compliance and analysis.
         - Convert all incoming messages to database contact
         - Analytics: Track message delivery and engagement metrics (not this in community edition).
+
+
+Visit Our Website : https://www.infinyscloud.com/
+
+Odoo Website trial : https://odoo-ce.atisicloud.com
+Username : odoo-trial@isi.co.id
+Password : odoo-trial
