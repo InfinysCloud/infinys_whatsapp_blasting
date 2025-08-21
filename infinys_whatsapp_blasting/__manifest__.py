@@ -49,7 +49,7 @@
     ],
 
     'images': [      
-       'static/description/banner.jpg',
+       'static/description/banner.png',
    ],
     
     'installable': True,
