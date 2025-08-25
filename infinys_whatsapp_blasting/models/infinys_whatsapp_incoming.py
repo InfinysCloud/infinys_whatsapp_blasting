@@ -96,6 +96,8 @@ class WhatsappIncomingMessage(models.Model):
 
         try:
 
+            text_message = self.reply_message
+
             if not self.quotedMsgId:
                 raise UserError("Please input reply message.")
 
