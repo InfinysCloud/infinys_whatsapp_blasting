@@ -435,7 +435,7 @@ class WhatsappMailing(models.Model):
             _logger.info("Found records to process: %s", records)
             for record in records:
                 _logger.info(" Record Process : %s", record, " state : %s", record.state)
-                self.mailing_queue(record, record.state)
+                self.mailing_queue(record,record.contact_ids,record.state)
                 
             
         return True
