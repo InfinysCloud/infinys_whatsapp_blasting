@@ -3,7 +3,7 @@
 {
     "name": "Infinys Whatsapp Blasting",
     "summary": """
-        Manage & Track Whatsapp Marketing Campaigns, Lists, and Contacts (Community Edition)
+        Manage & Track Whatsapp Marketing Campaigns, Lists, and Contacts 
     """,
     "description": """
         Our Whatsapp Blasting / Broadcasting Messaging Application is a powerful communication tool designed to send personalized or bulk messages to multiple WhatsApp contacts directly through a user-friendly dashboard. Ideal for businesses, marketers, and customer support teams, this tool leverages the WhatsApp Web protocol to automate message delivery while maintaining human-like interactions.
