@@ -222,7 +222,7 @@ class WhatsappMailing(models.Model):
             if record.recipients == 'mailinglistcontact':
                 contact_ids = record.contact_ids
             else:
-                if (not record.mailing_list_id):
+                if (record.mailing_list_id):
                     raise UserError("No selected Mailing List.")
                 
                 contact_ids = record.mailing_list_id.contact_ids.search([('is_active', '=', True), ['mailinglist_ids', 'in', record.mailing_list_id.id]])
