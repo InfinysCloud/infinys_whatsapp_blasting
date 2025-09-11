@@ -1,16 +1,18 @@
 import logging
 import re
 import json
-from odoo import models, fields, api, tools
+import mimetypes
+import requests
 import werkzeug.urls
 import pytz
 import time
+from odoo import models, fields, api, tools
 from datetime import datetime, timedelta
 from odoo.tools import html_sanitize, html_escape
 from odoo.tools.safe_eval import safe_eval
 from odoo.tools.float_utils import float_round
-from odoo.exceptions import UserError
-import requests
+from odoo.exceptions import UserError, ValidationError
+
 from ..utils import waha_utils
 from ..utils import texttohtml_utils
 from ..utils import n8n_utils
@@ -64,12 +66,14 @@ class WhatsappMailing(models.Model):
     header_type = fields.Selection([
         ('none', 'None'),
         ('text', 'Text'),
+        ('image', 'Image'),
+        ('video', 'Video'),
+        ('document', 'Document')
        ], string="Header Type", default='none')
     
     header_text = fields.Char(string="Template Header Text", size=60)
-    #header_attachment_ids = fields.Many2many(
-    #    'ir.attachment', string="Template Static Header",
-    #    copy=False)  # keep False to avoid linking attachments; we have to copy them instead
+    header_attachment_ids = fields.Many2many('ir.attachment', string="Template Static Header",copy=False)  # keep False to avoid linking attachments; we have to copy them instead
+    header_attachment_url= fields.Char(string="Header URL", store=True)
     footer_text = fields.Char(string="Footer Message", size=150)
 
     # Statistics are now computed from lines
@@ -108,6 +112,17 @@ class WhatsappMailing(models.Model):
                     raise UserError("Schedule date must be greater than today")
         return sts
 
+    @api.constrains('header_attachment_ids', 'header_type')
+    def _check_header_attachment_ids(self):
+        templates_with_attachments = self.filtered('header_attachment_ids')
+        _logger.info(f"templates_with_attachments: {templates_with_attachments}")
+        
+        for tmpl in templates_with_attachments:
+            if len(tmpl.header_attachment_ids) > 1:
+                raise ValidationError(_('You may only use one header attachment for each template'))
+            if tmpl.header_type not in ['image', 'video', 'document']:
+                raise ValidationError(_("Only templates using media header types may have header documents"))
+    
     def _compute_statistics(self):
         for mailing in self:
             mailing.is_body_empty = tools.is_html_empty(mailing.message)
@@ -119,6 +134,9 @@ class WhatsappMailing(models.Model):
 
     def btn_submit(self):
         _logger.info("btn_submit")
+
+        self.remove_previous_attachment()
+        self.publish_attachment()
 
         if (self.schedule_date):
             self.state = "submit"
@@ -215,14 +233,17 @@ class WhatsappMailing(models.Model):
     def btn_send_now(self):
         _logger.info("btn_send_now")
         record = self
-
+        
+        remove_previous_attachment= self.remove_previous_attachment()
+        set_publish_attachment= self.publish_attachment()
+       
         if self._check_schedule_date():
             contact_ids = []
                         
             if record.recipients == 'mailinglistcontact':
-                contact_ids = record.contact_ids
+                contact_ids = record.contact_ids.search([('is_active', '=', True)])
             else:
-                if (record.mailing_list_id):
+                if not record.mailing_list_id:
                     raise UserError("No selected Mailing List.")
                 
                 contact_ids = record.mailing_list_id.contact_ids.search([('is_active', '=', True), ['mailinglist_ids', 'in', record.mailing_list_id.id]])
@@ -275,63 +296,7 @@ class WhatsappMailing(models.Model):
                 })
 
                 self.set_webhook_message(mailing_record, rec_mailing_log, contact_ids)
-
-                #for contact in contact_ids:
-                #    _logger.info(f"Processing contact: {contact.name} with WhatsApp number: {contact.whatsapp_number} and mailinglistid: {contact.mailinglist_ids.ids}")
-                #    contact_data = ""
-                #    payload = ""
-
-                #    if not contact.whatsapp_number:
-                #        _logger.warning(f"Contact {contact.whatsapp_number} does not have a WhatsApp number.")
-                #        continue
-
-                #    if not contact.is_active:
-                        #_logger.warning(f"Contact {contact.name} is not active.")
-                #        continue
-
-                #    text_message = ""
-                #    text_message = self.set_wa_messsage(mailing_record,contact.name, contact.full_name)
-
-                #    if text_message:
-
-                #        contact_data = ({
-                #            "contact_id" : f"{contact.id}", 
-                #            "contact_name" : f"{contact.name}",
-                #            "contact_whatsapp" : f"{contact.whatsapp_number}",
-                #            "message" : f"{text_message}",
-                #            })
-                        
-                #        payload = { 
-                #            "jsonrpc": "2.0",
-                #            "wa_config_id": f"{mailing_record.whatsapp_config_id.id}",
-                #            "wa_config_name": f"{mailing_record.whatsapp_config_id.name}",
-                #            "mailing_id": f"{mailing_record.id}",
-                #            "mailing_list": f"{mailing_record.mailing_list_id.id}",
-                #            "mailing_list_name": f"{mailing_record.mailing_list_id.name}",
-                #            "mailing_log_id": f"{rec_mailing_log.id}",
-                #            "session" : "default",
-                #            "reply_to": f"{mailing_record.whatsapp_config_id.whatsapp_number}",
-                #            "contact": f"{json.dumps(contact_data)}"
-                #        }
-
-                         #create record infinys whatsapp sent
-                #       records = self.env['infinys.whatsapp.sent'].create({
-                #            'name': contact.name,
-                #            'config_id' : mailing_record.whatsapp_config_id.id,
-                #            'mailing_id': mailing_record.id,
-                #            'mailing_list_id': mailing_record.mailing_list_id.id,
-                #            'mailing_log_id': rec_mailing_log.id,
-                #            'contact_id': contact.id,
-                #            'from_number': contact.whatsapp_number,
-                #            'to_number': mailing_record.whatsapp_config_id.whatsapp_number,
-                #            'body': text_message,
-                #            'json_message': json.dumps(payload),
-                #            'json_contact' : json.dumps(contact_data),
-                #            'mime_type': 'text/plain',
-                #            'hasmedia' : False,
-                #            'is_queued' : True
-                #        })
-
+              
                 mailing_record.sent_date = fields.Datetime.now()
                 mailing_record.error_msg = "" 
 
@@ -375,7 +340,7 @@ class WhatsappMailing(models.Model):
                         "contact_id" : f"{contact.id}", 
                         "contact_name" : f"{contact.name}",
                         "contact_whatsapp" : f"{contact.whatsapp_number}",
-                        "message" : f"{text_message}",
+                        "message" : f"{text_message}"
                         })
                     
                     payload = { 
@@ -404,8 +369,9 @@ class WhatsappMailing(models.Model):
                         'body': text_message,
                         'json_message': json.dumps(payload),
                         'json_contact' : json.dumps(contact_data),
-                        'mime_type': 'text/plain',
-                        'hasmedia' : False,
+                        'mime_type': mailing_record.get_mime_type(mailing_record.header_attachment_ids),
+                        'hasmedia' : False if mailing_record.header_type in ['none','text'] else True,
+                        'media_url' : mailing_record.header_attachment_url,
                         'is_queued' : True
                     })
                 sts = True
@@ -434,15 +400,33 @@ class WhatsappMailing(models.Model):
         if records:
             _logger.info("Found records to process: %s", records)
             for record in records:
-                _logger.info(" Record Process : %s", record, " state : %s", record.state)
-                self.mailing_queue(record,record.contact_ids,record.state)
                 
-            
+                _logger.info(" Record Process : %s", record, " state : %s", record.state)
+                
+                try:
+                    record.error_msg = ""
+                    contact_ids = []
+
+                    if record.recipients == 'mailinglistcontact':
+                        contact_ids = record.contact_ids.search([('is_active', '=', True)])
+                    else:
+                        if not record.mailing_list_id:
+                            raise UserError("No selected Mailing List.")
+                        
+                        contact_ids = record.mailing_list_id.contact_ids.search([('is_active', '=', True), ['mailinglist_ids', 'in', record.mailing_list_id.id]])
+
+                    self.mailing_queue(record,contact_ids,record.state)
+
+                except Exception as e:
+                    _logger.error(f"Error in _send_whatsapp_blasting: {e}")
+                    record.error_msg = f"Error in _send_whatsapp_blasting: {e}"
+                    record.state = "failed"
+             
         return True
     
     def _execute_enqueue(self):
         _logger.info("__execute_queue")
-        
+
         payload = {}
         contact_data={}
         records = self.env['infinys.whatsapp.sent'].search([('is_queued', '=', True)],limit=10)
@@ -456,7 +440,10 @@ class WhatsappMailing(models.Model):
                    "contact_id" : f"{record.contact_id.id}", 
                    "contact_name" : f"{record.name}",
                    "contact_whatsapp" : f"{record.from_number}",
-                    "message" : f"{record.body}",
+                   "message" : f"{record.body}",
+                   "mime_type" : f"{record.mime_type}",
+                   "media_url" : f"{record.media_url}",
+                   "hasmedia" : f"{record.hasmedia}"
                 })
                 _logger.info(f"Sending contact_data: {contact_data}")
 
@@ -519,5 +506,32 @@ class WhatsappMailing(models.Model):
                     idx = 5
             record.state_idx = idx
          
+    def remove_previous_attachment(self):
+        self.ensure_one()
+        _logger.info("remove_previous_attachment")
+        self.header_attachment_url = ""
+        orphan_attachments = self.env['ir.attachment'].search([
+            ('res_model', '=', 'infinys.whatsapp.mailing'),
+            ('res_id', '=', 0)
+        ]).unlink()
+       
+    def publish_attachment(self):
+        self.ensure_one()
+        _logger.info("publish_attachment")
+        self.header_attachment_url = ""
+        header_attachment_ids = self.header_attachment_ids
+        if header_attachment_ids:   
+            for attachment in header_attachment_ids:
+                attachment.write({
+                        'res_id': self.id,
+                        'res_model': 'infinys.whatsapp.mailing',
+                        'public': True
+                    })
+                self.header_attachment_url = f"/web/content/{attachment.id}"
 
-            
+    def get_mime_type(self,header_attachment_ids):
+        mime_type = 'text/plain'
+        if header_attachment_ids and len(header_attachment_ids) > 0:
+            attachment = header_attachment_ids[0]
+            mime_type = attachment.mimetype if attachment.mimetype else mimetypes.guess_type(attachment.name)[0]
+        return mime_type
